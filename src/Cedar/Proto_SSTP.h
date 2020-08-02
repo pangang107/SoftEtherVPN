@@ -61,6 +61,7 @@
 #define	SSTP_SERVER_STATUS_REQUEST_PENGING			0	// Connection incomplete
 #define	SSTP_SERVER_STATUS_CONNECTED_PENDING		1	// Connection completed. Authentication incomplete
 #define	SSTP_SERVER_STATUS_ESTABLISHED				2	// Connection completed. Communication available
+#define	SSTP_SERVER_STATUS_NOT_INITIALIZED	INFINITE	// Connection not accepted yet.
 
 // Length of Nonce
 #define	SSTP_NONCE_SIZE								32	// 256 bits
@@ -121,12 +122,14 @@ struct SSTP_SERVER
 
 
 //// Function prototype
-bool AcceptSstp(CONNECTION *c);
-bool ProcessSstpHttps(CEDAR *cedar, SOCK *s, SOCK_EVENT *se);
+const PROTO_IMPL *SstpGetProtoImpl();
+const PROTO_OPTION *SstpOptions();
+const char *SstpName();
+bool SstpInit(void **param, const LIST *options, CEDAR *cedar, INTERRUPT_MANAGER *im, SOCK_EVENT *se, const char *cipher, const char *hostname);
+void SstpFree(void *param);
+bool SstpProcessData(void *param, TCP_RAW_DATA *in, FIFO *out);
 
-SSTP_SERVER *NewSstpServer(CEDAR *cedar, IP *client_ip, UINT client_port, IP *server_ip,
-						   UINT server_port, SOCK_EVENT *se,
-						   char *client_host_name, char *crypt_name);
+SSTP_SERVER *NewSstpServer(CEDAR *cedar, INTERRUPT_MANAGER *im, SOCK_EVENT *se, const char *cipher, const char *hostname);
 void FreeSstpServer(SSTP_SERVER *s);
 void SstpProcessInterrupt(SSTP_SERVER *s);
 SSTP_PACKET *SstpParsePacket(UCHAR *data, UINT size);
@@ -151,6 +154,5 @@ SSTP_PACKET *SstpNewDataPacket(UCHAR *data, UINT size);
 SSTP_PACKET *SstpNewControlPacket(USHORT message_type);
 SSTP_PACKET *SstpNewControlPacketWithAnAttribute(USHORT message_type, SSTP_ATTRIBUTE *a);
 void SstpSendPacket(SSTP_SERVER *s, SSTP_PACKET *p);
-bool GetNoSstp();
 
 #endif	// PROTO_SSTP_H

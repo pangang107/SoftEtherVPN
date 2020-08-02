@@ -5878,9 +5878,7 @@ bool ServerDownloadSignature(CONNECTION *c, char **error_detail_str)
 				}
 			}
 		}
-		else if (StrCmpi(h->Method, "SSTP_DUPLEX_POST") == 0 && (server->DisableSSTPServer == false || s->IsReverseAcceptedSocket
-			) &&
-			GetServerCapsBool(server, "b_support_sstp") && GetNoSstp() == false)
+		else if (StrCmpi(h->Method, "SSTP_DUPLEX_POST") == 0 && (ProtoEnabled(server->Proto, "SSTP") || s->IsReverseAcceptedSocket) && GetServerCapsBool(server, "b_support_sstp"))
 		{
 			// SSTP client is connected
 			c->WasSstp = true;
@@ -5891,7 +5889,7 @@ bool ServerDownloadSignature(CONNECTION *c, char **error_detail_str)
 				// Accept the SSTP connection
 				c->Type = CONNECTION_TYPE_OTHER;
 
-				sstp_ret = AcceptSstp(c);
+				sstp_ret = ProtoHandleConnection(server->Proto, s, "SSTP");
 
 				c->Err = ERR_DISCONNECTED;
 				FreeHttpHeader(h);
